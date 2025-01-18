@@ -9,7 +9,9 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "workspaceContains:nodearch.json"
+  ],
   "main": "./dist/extension.js",
   "publisher": "nodearch",
   "contributes": {
@@ -19,6 +21,10 @@
         "title": "Hello World"
       }
     ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nodearch/vscode-extension"
   },
   "scripts": {
     "vscode:prepublish": "npm run package",
