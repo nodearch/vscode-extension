@@ -14,13 +14,31 @@
   ],
   "main": "./dist/extension.js",
   "publisher": "nodearch",
+  "icon": "assets/icon.png",
   "contributes": {
     "commands": [
       {
         "command": "nodearch-vscode-extension.helloWorld",
         "title": "Hello World"
       }
-    ]
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "nodearch-view",
+          "title": "NodeArch",
+          "icon": "assets/icon.png"
+        }
+      ]
+    },
+    "views": {
+      "nodearch-view": [
+        {
+          "id": "nodearchExplorer",
+          "name": "NodeArch Explorer"
+        }
+      ]
+    }
   },
   "repository": {
     "type": "git",
