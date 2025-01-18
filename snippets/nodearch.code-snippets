@@ -1,0 +1,15 @@
+{
+  "NodeArch Hook": {
+    "prefix": "nodearch-hook",
+    "body": [
+      "module.exports = {",
+      "  hook: '${1:hook-name}',",
+      "  method: async function(ctx, next) {",
+      "    ${2:// Your logic here}",
+      "    await next();",
+      "  }",
+      "};"
+    ],
+    "description": "Create a NodeArch hook"
+  }
+}

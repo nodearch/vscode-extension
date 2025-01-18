@@ -18,27 +18,52 @@
   "contributes": {
     "commands": [
       {
-        "command": "nodearch-vscode-extension.helloWorld",
-        "title": "Hello World"
+        "command": "nodearch.createHook",
+        "title": "NodeArch: Create Hook"
+      },
+      {
+        "command": "nodearchComponents.refreshEntry",
+        "title": "Refresh",
+        "icon": {
+          "light": "resources/light/refresh.svg",
+          "dark": "resources/dark/refresh.svg"
+        }
       }
     ],
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "nodearch-view",
+          "id": "nodearch-activitybar",
           "title": "NodeArch",
           "icon": "assets/icon.png"
         }
       ]
     },
     "views": {
-      "nodearch-view": [
+      "nodearch-activitybar": [
         {
-          "id": "nodearchExplorer",
-          "name": "NodeArch Explorer"
+          "id": "nodearchComponents",
+          "name": "NodeArch Components",
+          "icon": "media/dep.svg", // update 
+          "contextualTitle": "NodeArch Components"
         }
       ]
-    }
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "nodearchComponents.refreshEntry",
+          "when": "view == nodearchComponents",
+          "group": "navigation"
+        }
+      ]
+    },
+    "snippets": [
+      {
+        "language": "typescript",
+        "path": "./snippets/nodearch.code-snippets"
+      }
+    ]
   },
   "repository": {
     "type": "git",
