@@ -3,7 +3,7 @@ name: Publish VSCode Extension
 on:
   push:
     branches:
-      - main
+      - mainX
 
 jobs:
   publish:
