@@ -1,0 +1,178 @@
+{
+  "NodeArch Hook": {
+    "prefix": "nodearch-hook",
+    "body": [
+      "import { Hook, IHook } from '@nodearch/core';",
+      "",
+      "@Hook()",
+      "export class ${1:MyHook} implements IHook {",
+      "",
+      "  constructor() {}",
+      "",
+      "  async onStart() {",
+      "    ${2:// Your logic here}",
+      "  }",
+      "",
+      "  async onStop() {",
+      "    ${3:// Cleanup logic here}",
+      "  }",
+      "",
+      "}"
+    ],
+    "description": "Create a NodeArch hook"
+  },
+  "NodeArch Service": {
+    "prefix": "nodearch-service",
+    "body": [
+      "import { Service } from '@nodearch/core';",
+      "",
+      "@Service()",
+      "export class ${1:MyService} implements IService {",
+      "",
+      "  constructor() {}",
+      "",
+      "  ${2:// Your logic here}",
+      "",
+      "}"
+    ],
+    "description": "Create a NodeArch service"
+  },
+  "NodeArch Controller": {
+    "prefix": "nodearch-controller",
+    "body": [
+      "import { Controller } from '@nodearch/core';",
+      "",
+      "@Controller()",
+      "export class ${1:MyController} {",
+      "",
+      "  constructor() { }",
+      "",
+      "  ${2:// Your logic here}",
+      "",
+      "}"
+    ],
+    "description": "Create a NodeArch Controller"
+  },
+  "NodeArch Repository": {
+    "prefix": "nodearch-repository",
+    "body": [
+      "import { Repository } from '@nodearch/core';",
+      "",
+      "@Repository()",
+      "export class ${1:MyRepository} {",
+      "",
+      "  constructor() { }",
+      "",
+      "  ${2:// Your data access logic here}",
+      "",
+      "}"
+    ],
+    "description": "Create a NodeArch Repository"
+  },
+  "NodeArch Command": {
+    "prefix": "nodearch-command",
+    "body": [
+      "import { Command, ICommand } from '@nodearch/command';",
+      "",
+      "@Command()",
+      "export class ${1:MyCommand} implements ICommand {",
+      "  command = '${2:cmd}';",
+      "  describe = '${3:Command description}';",
+      "",
+      "  async handler(args: any) {",
+      "    ${4:// Your command logic here}",
+      "  }",
+      "}"
+    ],
+    "description": "Create a NodeArch Command"
+  },
+  "NodeArch Test": {
+    "prefix": "nodearch-test",
+    "body": [
+      "import { BeforeEach, Case, Test } from '@nodearch/mocha';",
+      "",
+      "@Test()",
+      "export class ${1:MyTest} {",
+      "",
+      "  constructor() {}",
+      "",
+      "  @BeforeEach()",
+      "  async ${2:cleanupData}() {",
+      "    ${3:// Your cleanup code here}",
+      "  }",
+      "",
+      "  @Case()",
+      "  async ${4:testCaseName}() {",
+      "    ${5:// Your test code here}",
+      "  }",
+      "",
+      "}"
+    ],
+    "description": "Create a NodeArch Test Suite"
+  },
+  "NodeArch Config": {
+    "prefix": "nodearch-config",
+    "body": [
+      "import { Config, ConfigManager } from '@nodearch/core';",
+      "",
+      "@Config()",
+      "export class ${1:MyConfig} {",
+      "",
+      "  ${2:firstConf}: ${3:string};",
+      "",
+      "  constructor(config: ConfigManager) {",
+      "    this.${2:firstConf} = config.env({",
+      "      key: '${4:FIRST_CONF_KEY}',",
+      "      defaults: {",
+      "        all: ${5:default}",
+      "      }",
+      "    });",
+      "  }",
+      "",
+      "}"
+    ],
+    "description": "Create a NodeArch Config"
+  },
+  "NodeArch Main": {
+    "prefix": "nodearch-main",
+    "body": [
+      "import { App } from '@nodearch/core';",
+      "",
+      "export default class ${1:MyApp} extends App {",
+      "  constructor() {",
+      "    super({",
+      "      components: {",
+      "        url: new URL('components', import.meta.url)",
+      "      },",
+      "      extensions: [],",
+      "      logs: {",
+      "        prefix: '${1:MyApp}'",
+      "      }",
+      "    });",
+      "  }",
+      "}"
+    ],
+    "description": "Create a NodeArch Main App"
+  },
+  "NodeArch App": {
+    "prefix": "nodearch-app",
+    "body": [
+      "import { App } from '@nodearch/core';",
+      "",
+      "export class ${1:MyApp} extends App {",
+      "  constructor() {",
+      "    super({",
+      "      components: {",
+      "        url: new URL('components', import.meta.url)",
+      "      },",
+      "      extensions: [],",
+      "      logs: {",
+      "        prefix: '${1:MyApp}'",
+      "      }",
+      "    });",
+      "  }",
+      "}"
+    ],
+    "description": "Create a NodeArch App"
+  }
+}

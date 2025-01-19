@@ -2,7 +2,7 @@
   "name": "nodearch-tools",
   "displayName": "NodeArch Tools",
   "description": "A VSCode extension for NodeArch framework development",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "engines": {
     "vscode": "^1.96.0"
   },
@@ -23,10 +23,18 @@
       },
       {
         "command": "nodearchComponents.refreshEntry",
-        "title": "Refresh",
+        "title": "NodeArch: Refresh Components",
         "icon": {
-          "light": "resources/light/refresh.svg",
-          "dark": "resources/dark/refresh.svg"
+          "light": "assets/refresh-light.svg",
+          "dark": "assets/refresh-dark.svg"
+        }
+      },
+      {
+        "command": "nodearchComponents.addEntry",
+        "title": "NodeArch: Add Components",
+        "icon": {
+          "light": "assets/plus-light.svg",
+          "dark": "assets/plus-dark.svg"
         }
       }
     ],
@@ -43,9 +51,18 @@
       "nodearch-activitybar": [
         {
           "id": "nodearchComponents",
-          "name": "NodeArch Components",
-          "icon": "media/dep.svg", // update 
+          "name": "Components",
           "contextualTitle": "NodeArch Components"
+        },
+        {
+          "id": "nodearchTests",
+          "name": "Tests",
+          "contextualTitle": "NodeArch Tests"
+        },
+        {
+          "id": "nodearchExtensions",
+          "name": "Extensions",
+          "contextualTitle": "NodeArch Extensions"
         }
       ]
     },
@@ -55,13 +72,18 @@
           "command": "nodearchComponents.refreshEntry",
           "when": "view == nodearchComponents",
           "group": "navigation"
+        },
+        {
+          "command": "nodearchComponents.addEntry",
+          "when": "view == nodearchComponents",
+          "group": "navigation"
         }
       ]
     },
     "snippets": [
       {
         "language": "typescript",
-        "path": "./snippets/nodearch.code-snippets"
+        "path": "./snippets/components.code-snippets"
       }
     ]
   },

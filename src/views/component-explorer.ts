@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 
-export class NodeArchComponentsProvider implements vscode.TreeDataProvider<NodeArchComponent> {
-  // constructor(private workspaceRoot: string) {}
+
+export class ComponentExplorerProvider implements vscode.TreeDataProvider<NodeArchComponent> {
 
   private _onDidChangeTreeData: vscode.EventEmitter<NodeArchComponent | undefined | null | void> = 
     new vscode.EventEmitter<NodeArchComponent | undefined | null | void>();
@@ -9,7 +9,7 @@ export class NodeArchComponentsProvider implements vscode.TreeDataProvider<NodeA
   readonly onDidChangeTreeData: vscode.Event<NodeArchComponent | undefined | null | void> = 
     this._onDidChangeTreeData.event;
 
-  refresh(): void {
+  refresh() {
     this._onDidChangeTreeData.fire();
   }
 
@@ -17,19 +17,11 @@ export class NodeArchComponentsProvider implements vscode.TreeDataProvider<NodeA
     return element;
   }
 
-  getChildren(element?: NodeArchComponent): Thenable<NodeArchComponent[]> {
-
-    return Promise.resolve([
+  async getChildren(element?: NodeArchComponent) {
+    return [
       new NodeArchComponent('UserHook', 'Hook', vscode.TreeItemCollapsibleState.None),
       new NodeArchComponent('UserController', 'Controller', vscode.TreeItemCollapsibleState.None),
-    ]);
-
-    // vscode.window.showInformationMessage('Workspace has no package.json');
-
-    // if (!this.workspaceRoot) {
-    //   vscode.window.showInformationMessage('No dependency in empty workspace');
-    //   return Promise.resolve([]);
-    // }
+    ];
   }
 
 }
@@ -43,10 +35,6 @@ class NodeArchComponent extends vscode.TreeItem {
     super(componentName, collapsibleState);
     this.tooltip = `@${componentType}() ${componentName}`;
     this.description = `@${componentType}()`;
+    this.iconPath = new vscode.ThemeIcon('symbol-class');
   }
-
-  // iconPath = {
-  //   light: new vscode.ThemeIcon('library'),
-  //   dark: new vscode.ThemeIcon('library'),
-  // };
 }
