@@ -2,7 +2,7 @@
   "name": "nodearch-tools",
   "displayName": "NodeArch Tools",
   "description": "A VSCode extension for NodeArch framework development",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "engines": {
     "vscode": "^1.96.0"
   },
@@ -16,6 +16,18 @@
   "publisher": "nodearch",
   "icon": "assets/icon.png",
   "contributes": {
+    "languages": [
+      {
+        "id": "typescript",
+        "aliases": [
+          "TypeScript",
+          "ts"
+        ],
+        "extensions": [
+          ".ts"
+        ]
+      }
+    ],
     "commands": [
       {
         "command": "nodearch.createHook",
