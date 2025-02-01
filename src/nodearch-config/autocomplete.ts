@@ -1,13 +1,5 @@
 import * as vscode from 'vscode';
-
-// Define a list of valid keys for auto-completion
-const validKeys = [
-  'server.host',
-  'server.port',
-  'database.username',
-  'database.password',
-  'logging.level'
-];
+import { IConfigOption, options } from './options';
 
 export default function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
@@ -26,15 +18,38 @@ export default function activate(context: vscode.ExtensionContext) {
           if (linePrefix.includes('=')) {
             return undefined;
           }
+
+          // Exclude options that have already been set in the document
+          const usedKeys = new Set<string>();
+          const keyRegex = /[A-Za-z0-9_$\.]+/g;
+          let match: RegExpExecArray | null;
+
+          while ((match = keyRegex.exec(document.getText()))) {
+            usedKeys.add(match[0]);
+          }
+
+          // Filter out options that have already been set
+          const filteredOptions = options.filter((option) => option.multiple || !usedKeys.has(option.key));
+
+          // If there are no completions to offer, return undefined
+          if (filteredOptions.length === 0) {
+            return undefined;
+          }
           
           // Create completion items for each valid key
-          const completions: vscode.CompletionItem[] = validKeys.map(key => {
-            const item = new vscode.CompletionItem(key, vscode.CompletionItemKind.Property);
-            // Set a text edit that replaces the current word with the full key
-            item.textEdit = vscode.TextEdit.replace(wordRange, key);
+          const completions: vscode.CompletionItem[] = filteredOptions.map((option) => {
+            const item = new vscode.CompletionItem(option.key, vscode.CompletionItemKind.Property);
+            
+            item.insertText = formatOptionStr(option);
+              
+            item.range = wordRange;
+
+            // item.filterText = option.default ? `${option.key}=${option.default}` : option.key + '=';
             // Optionally, set filterText so VS Code can filter suggestions by what was already typed
-            item.filterText = key;
-            item.detail = "Nodearch config key";
+            item.filterText = option.key;
+            // item.detail = "Nodearch config key";
+            item.detail = option.description;
+            
             return item;
           });
 
@@ -46,4 +61,11 @@ export default function activate(context: vscode.ExtensionContext) {
       ...'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
     )
   );
+}
+
+
+function formatOptionStr(option: IConfigOption) {
+  const formattedDefault = option.type === 'string' ? `"${option.default || ''}"` : option.default;
+
+  return option.key + '=' + (formattedDefault || '');
 }

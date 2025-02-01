@@ -167,6 +167,8 @@ class ControllerCodeActionProvider implements vscode.CodeActionProvider {
  * - Provide Number of controllers, hooks, services, and tests in the status bar.
  * - Coverage of @Test cases and hooks.
  * - Highlight unused components or services.
+ * - Debug tab
+ * - Tests tab
  */
 
 

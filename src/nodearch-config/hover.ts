@@ -1,13 +1,5 @@
 import * as vscode from 'vscode';
-
-// Dictionary mapping keys to their hover hints
-const keyHints: { [key: string]: string } = {
-  'server.host': 'The host of your server, e.g. `localhost` or an IP address.',
-  'server.port': 'The port on which your server listens (e.g. `3000`).',
-  'database.username': 'The username for the database connection.',
-  'database.password': 'The password for the database connection.',
-  'logging.level': 'The logging level: `debug`, `info`, `warn`, or `error`.'
-};
+import { options } from './options';
 
 export default function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
@@ -23,7 +15,8 @@ export default function activate(context: vscode.ExtensionContext) {
           const word = document.getText(wordRange);
 
           // Check if this key has an associated hint
-          const hint = keyHints[word];
+          const hint = options.find((option) => option.key === word)?.description;
+          
           if (!hint) {
             return;
           }
