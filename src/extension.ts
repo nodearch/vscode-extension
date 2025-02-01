@@ -4,7 +4,7 @@ import { registerGenerateCommands } from './generate';
 import { ExtensionExplorerProvider } from './views/extension-explorer';
 import nodearchConfig from './nodearch-config';
 import codeInsights from './code-insights';
-
+import testing from './testing';
 
 export function activate(context: vscode.ExtensionContext) {
 	// Get the root path of the workspace
@@ -19,6 +19,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   nodearchConfig(context, diagnosticCollection);
   codeInsights(context, diagnosticCollection);
+	testing(context);
 
 	// Register commands that generate files
 	registerGenerateCommands(context, rootPath);
