@@ -1,0 +1,39 @@
+{
+  "name": "Nodearch Config",
+  "scopeName": "source.nodearch",
+  "patterns": [
+    {
+      "include": "#comments"
+    },
+    {
+      "include": "#property"
+    }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.number-sign.properties",
+          "match": "^[ \\t]*(#|!).*$"
+        }
+      ]
+    },
+    "property": {
+      "patterns": [
+        {
+          "name": "meta.property.assignment.properties",
+          "match": "^(?<key>[^=:\\s]+)[ \\t]*=[ \\t]*(?<value>.*)$",
+          "captures": {
+            "1": {
+              "name": "variable.other.property.key.properties"
+            },
+            "2": {
+              "name": "string.unquoted.property.value.properties"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "uuid": "baf305ca-1c52-11e8-bcf0-1f6b0d7b464b"
+}

@@ -4,6 +4,8 @@ import * as ts from 'typescript';
 import { ComponentExplorerProvider } from './views/component-explorer';
 import { registerGenerateCommands } from './generate';
 import { ExtensionExplorerProvider } from './views/extension-explorer';
+import nodearchConfig from './nodearch-config';
+
 
 export function activate(context: vscode.ExtensionContext) {
 	// Get the root path of the workspace
@@ -12,8 +14,11 @@ export function activate(context: vscode.ExtensionContext) {
 			? vscode.workspace.workspaceFolders[0].uri.fsPath
 			: undefined;
 
-	// Register the file decoration for nodearch.json
-	context.subscriptions.push(registerFileDecoration());
+
+  const diagnosticCollection = vscode.languages.createDiagnosticCollection('nodearch');
+  context.subscriptions.push(diagnosticCollection);
+
+  nodearchConfig(context, diagnosticCollection);
 
 	// Register commands that generate files
 	registerGenerateCommands(context, rootPath);
@@ -34,10 +39,6 @@ export function activate(context: vscode.ExtensionContext) {
 		'nodearchExtensions',
 		extensionProvider
 	);
-
-  const diagnosticCollection = vscode.languages.createDiagnosticCollection('nodearch');
-
-  context.subscriptions.push(diagnosticCollection);
 
   vscode.workspace.onDidChangeTextDocument((event) => {
     if (event.document.languageId === 'typescript') {
@@ -63,22 +64,6 @@ export function activate(context: vscode.ExtensionContext) {
 
 // This method is called when your extension is deactivated
 export function deactivate() { }
-
-function registerFileDecoration() {
-	return vscode.window.registerFileDecorationProvider({
-		provideFileDecoration(uri) {
-			if (path.basename(uri.fsPath) === 'nodearch.json') {
-				return {
-					badge: 'N',
-					tooltip: 'NodeArch Configuration',
-					propagate: false,
-					color: undefined
-				};
-			}
-			return undefined;
-		},
-	});
-}
 
 function runDiagnostics(document: vscode.TextDocument, collection: vscode.DiagnosticCollection) {
   const sourceFile = ts.createSourceFile(
@@ -183,3 +168,6 @@ class ControllerCodeActionProvider implements vscode.CodeActionProvider {
  * - Coverage of @Test cases and hooks.
  * - Highlight unused components or services.
  */
+
+
+// https://dev.to/zirkelc/automatically-recommend-vscode-extensions-540c
