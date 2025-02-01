@@ -1,10 +1,3 @@
-// 'server.host',
-// 'server.port',
-// 'database.username',
-// 'database.password',
-// 'logging.level'
-
-
 export interface IConfigOption {
   key: string;
   description: string;
