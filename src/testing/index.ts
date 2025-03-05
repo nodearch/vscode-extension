@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import * as cp from 'child_process';
 import { parseTestCases } from './testCaseParser';
 
 export default function activate(context: vscode.ExtensionContext) {
@@ -91,10 +92,8 @@ export default function activate(context: vscode.ExtensionContext) {
       let queue: vscode.TestItem[] = [];
       
       if (request.include) {
-        // Convert readonly array to mutable array with spread operator
         queue = [...request.include];
       } else {
-        // If no specific tests were requested, use all tests from controller
         controller.items.forEach(item => queue.push(item));
       }
       
@@ -104,11 +103,28 @@ export default function activate(context: vscode.ExtensionContext) {
       while (queue.length > 0) {
         const item = queue.shift()!;
         if (item.children.size > 0) {
-          // Add all children to the queue - don't use Array.from
           item.children.forEach(child => queue.push(child));
         } else {
           testItems.push(item);
         }
+      }
+      
+      // Get workspace root for executing commands
+      const workspaceFolders = vscode.workspace.workspaceFolders;
+      if (!workspaceFolders) {
+        vscode.window.showErrorMessage('No workspace is open to run tests in.');
+        run.end();
+        return;
+      }
+      const workspaceRoot = workspaceFolders[0].uri.fsPath;
+      
+      // Create or get terminal for test execution
+      let terminal: vscode.Terminal | undefined = vscode.window.terminals.find(t => t.name === 'NodeArch Tests');
+      if (!terminal) {
+        terminal = vscode.window.createTerminal({
+          name: 'NodeArch Tests',
+          cwd: workspaceRoot
+        });
       }
       
       // Execute each test
@@ -119,16 +135,71 @@ export default function activate(context: vscode.ExtensionContext) {
         run.started(test);
         
         try {
-          // Here we would actually execute the test
-          // If we need the description, we can get it from our map
+          // Get test description from our map
           const testData = testDataMap.get(test.id);
           const description = testData?.description || test.label;
           
-          // Just simulate test running for now
-          await new Promise(resolve => setTimeout(resolve, 500));
-          run.passed(test, 500);
+          // Escape quotes in the description for the shell command
+          const escapedDescription = description.replace(/"/g, '\\"');
+          
+          // Run the test using nodearch command
+          const cmd = `nodearch test -g "${escapedDescription}"`;
+          console.log(`Executing: ${cmd}`);
+          
+          // Option 1: Run in terminal (visual feedback but harder to capture output)
+          // terminal.show();
+          // terminal.sendText(cmd);
+          
+          // Option 2: Run using child_process (better for capturing output)
+          const result = await new Promise<{ code: number, output: string }>((resolve, reject) => {
+            let output = '';
+            
+            const proc = cp.exec(cmd, { cwd: workspaceRoot }, (error, stdout, stderr) => {
+              output = stdout + '\n' + stderr;
+              if (error) {
+                resolve({ code: error.code || 1, output });
+              } else {
+                resolve({ code: 0, output });
+              }
+            });
+            
+            // Allow for cancellation
+            token.onCancellationRequested(() => {
+              proc.kill();
+              reject(new Error('Test execution cancelled'));
+            });
+          });
+          
+          console.log(`Test execution output for "${description}":`);
+          console.log(result.output);
+          
+          if (result.code === 0) {
+            // Test passed
+            run.passed(test);
+            
+            // Add output to the test run's output channel
+            if (result.output.trim()) {
+              run.appendOutput(`\n--- Output from "${description}" ---\n`);
+              run.appendOutput(result.output);
+              run.appendOutput('\n--- End of output ---\n\n');
+            }
+          } else {
+            // Test failed - we can attach the error message to the failure
+            const message = new vscode.TestMessage(result.output);
+            // Create a proper Location object for error messages
+            if (test.uri && test.range) {
+              message.location = new vscode.Location(test.uri, test.range);
+            }
+            run.failed(test, message);
+          }
         } catch (err) {
-          run.failed(test, new vscode.TestMessage(`Test failed: ${err}`));
+          const errorMessage = err instanceof Error ? err.message : String(err);
+          console.error(`Error running test "${test.label}":`, errorMessage);
+          const message = new vscode.TestMessage(`Failed to run test: ${errorMessage}`);
+          if (test.uri && test.range) {
+            message.location = new vscode.Location(test.uri, test.range);
+          }
+          run.failed(test, message);
         }
       }
       
@@ -137,14 +208,16 @@ export default function activate(context: vscode.ExtensionContext) {
     true
   );
 
-  // Debug run profile
+  // Debug run profile - similar but with debugging configuration
   controller.createRunProfile(
     'Debug',
     vscode.TestRunProfileKind.Debug,
     async (request, token) => {
       const run = controller.createTestRun(request);
-      // Similar implementation as Run but with debugging capabilities
+      
+      // Similar implementation to Run but with --inspect flag
       // ...
+      
       run.end();
     },
     true
