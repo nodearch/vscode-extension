@@ -1,55 +1,150 @@
 import * as vscode from 'vscode';
+import * as fs from 'fs/promises';
+import * as path from 'path';
+import { parseTestCases } from './testCaseParser';
 
 export default function activate(context: vscode.ExtensionContext) {
   // Create a Test Controller with a unique ID and a display label.
   const controller = vscode.tests.createTestController('nodearchTests', 'Nodearch Tests');
   context.subscriptions.push(controller);
 
-  // Discover or define your test cases.
-  // For example, here we're manually creating two test items.
-  // In a real-world scenario, you might read your test cases from files.
-  const testItem1 = controller.createTestItem('test1', 'Validate Config Syntax', vscode.Uri.file(''));
-  const testItem2 = controller.createTestItem('test2', 'Check Duplicate Keys', vscode.Uri.file(''));
-  
-  // Optionally, you can organize tests into a hierarchy by using testItem.children.add(…)
-  controller.items.add(testItem1);
-  controller.items.add(testItem2);
+  // Create a map to store additional test case data
+  const testDataMap = new Map<string, { description: string }>();
 
-  // Create a Run Profile for "Run" (and optionally one for "Debug")
+  // Function to discover test cases in the workspace
+  async function discoverTestCases() {
+    try {
+      const workspaceFolders = vscode.workspace.workspaceFolders;
+      if (!workspaceFolders) {
+        vscode.window.showWarningMessage('No workspace folders found.');
+        return;
+      }
+
+      // Clear existing test items
+      controller.items.replace([]);
+
+      // Find all TypeScript and JavaScript files
+      const filePattern = '**/*.{ts,js}';
+      const excludePattern = '**/node_modules/**';
+      
+      console.log('Looking for test files with pattern:', filePattern);
+      const files = await vscode.workspace.findFiles(filePattern, excludePattern);
+      console.log(`Found ${files.length} files to scan for tests`);
+
+      for (const fileUri of files) {
+        try {
+          const fileContent = await fs.readFile(fileUri.fsPath, 'utf-8');
+          
+          // Only attempt to parse files that contain @Case decorators
+          if (fileContent.includes('@Case')) {
+            console.log(`Found @Case decorator in ${fileUri.fsPath}`);
+            
+            // Use the imported parser to find test cases
+            const testCases = parseTestCases(fileContent, fileUri, controller, testDataMap);
+            console.log(`${testCases.length} test cases found in ${fileUri.fsPath}`);
+            
+            if (testCases.length > 0) {
+              // Create a file-level test item as a parent
+              const fileName = path.basename(fileUri.fsPath);
+              const fileTestItem = controller.createTestItem(
+                `file:${fileUri.fsPath}`,
+                fileName,
+                fileUri
+              );
+              
+              // Add each test case as a child of the file test item
+              testCases.forEach(testCase => {
+                fileTestItem.children.add(testCase);
+              });
+              
+              controller.items.add(fileTestItem);
+            }
+          }
+        } catch (error) {
+          console.error(`Error processing file ${fileUri.fsPath}:`, error);
+        }
+      }
+    } catch (error) {
+      console.error('Error discovering test cases:', error);
+    }
+  }
+
+  // Set up file watcher to update tests when files change
+  const fileWatcher = vscode.workspace.createFileSystemWatcher('**/*.{ts,js}');
+  context.subscriptions.push(
+    fileWatcher.onDidChange(discoverTestCases),
+    fileWatcher.onDidCreate(discoverTestCases),
+    fileWatcher.onDidDelete(discoverTestCases)
+  );
+
+  // Initial discovery of test cases
+  discoverTestCases();
+
+  // Create a Run Profile for "Run"
   controller.createRunProfile(
     'Run',
     vscode.TestRunProfileKind.Run,
     async (request, token) => {
-      // Create a new test run instance.
       const run = controller.createTestRun(request);
-
-      // You can iterate over the tests included in the request.
-      // For simplicity, we mark each test as enqueued, started, and then passed.
-      for (const test of request.include ?? []) {
+      
+      // Create a mutable queue of test items to process
+      let queue: vscode.TestItem[] = [];
+      
+      if (request.include) {
+        // Convert readonly array to mutable array with spread operator
+        queue = [...request.include];
+      } else {
+        // If no specific tests were requested, use all tests from controller
+        controller.items.forEach(item => queue.push(item));
+      }
+      
+      const testItems: vscode.TestItem[] = [];
+      
+      // Flatten the test hierarchy to get all individual test items
+      while (queue.length > 0) {
+        const item = queue.shift()!;
+        if (item.children.size > 0) {
+          // Add all children to the queue - don't use Array.from
+          item.children.forEach(child => queue.push(child));
+        } else {
+          testItems.push(item);
+        }
+      }
+      
+      // Execute each test
+      for (const test of testItems) {
+        if (token.isCancellationRequested) break;
+        
         run.enqueued(test);
         run.started(test);
-        // Here you would run the actual test logic.
-        // In this example, we'll simulate a passing test.
-        run.passed(test, new Date().getTime());
+        
+        try {
+          // Here we would actually execute the test
+          // If we need the description, we can get it from our map
+          const testData = testDataMap.get(test.id);
+          const description = testData?.description || test.label;
+          
+          // Just simulate test running for now
+          await new Promise(resolve => setTimeout(resolve, 500));
+          run.passed(test, 500);
+        } catch (err) {
+          run.failed(test, new vscode.TestMessage(`Test failed: ${err}`));
+        }
       }
-
+      
       run.end();
     },
-    true // This profile is the default run profile.
+    true
   );
 
-  // Optionally, create a Debug run profile in a similar manner:
+  // Debug run profile
   controller.createRunProfile(
     'Debug',
     vscode.TestRunProfileKind.Debug,
     async (request, token) => {
       const run = controller.createTestRun(request);
-      for (const test of request.include ?? []) {
-        run.enqueued(test);
-        run.started(test);
-        // Insert debugging logic here. For now, simulate a passing test.
-        run.passed(test, new Date().getTime());
-      }
+      // Similar implementation as Run but with debugging capabilities
+      // ...
       run.end();
     },
     true
