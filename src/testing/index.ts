@@ -177,20 +177,26 @@ export default function activate(context: vscode.ExtensionContext) {
             // Test passed
             run.passed(test);
             
-            // Add output to the test run's output channel
+            // Format and filter the output
             if (result.output.trim()) {
-              run.appendOutput(`\n--- Output from "${description}" ---\n`);
-              run.appendOutput(result.output);
-              run.appendOutput('\n--- End of output ---\n\n');
+              const formattedOutput = formatTestOutput(result.output);
+              run.appendOutput("\r\n" + formattedOutput + "\r\n");
             }
           } else {
-            // Test failed - we can attach the error message to the failure
-            const message = new vscode.TestMessage(result.output);
-            // Create a proper Location object for error messages
+            // For failed tests, use the same filtering approach
+            const formattedOutput = formatTestOutput(result.output);
+            
+            // For error messages in the Problems panel, strip color codes
+            const ansiRegex = /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g;
+            const plainOutput = formattedOutput.replace(ansiRegex, '');
+            const message = new vscode.TestMessage(plainOutput.replace(/\r\n/g, '\n'));
             if (test.uri && test.range) {
               message.location = new vscode.Location(test.uri, test.range);
             }
             run.failed(test, message);
+            
+            // Show color output in the test output panel
+            run.appendOutput("\r\n" + formattedOutput + "\r\n");
           }
         } catch (err) {
           const errorMessage = err instanceof Error ? err.message : String(err);
@@ -207,6 +213,29 @@ export default function activate(context: vscode.ExtensionContext) {
     },
     true
   );
+
+  // Helper function to format test output - filter logs and fix line breaks
+  function formatTestOutput(output: string): string {
+    // Split the output into lines
+    const lines = output.split(/\r?\n/);
+    
+    // Find the index of the line that indicates the start of Mocha output
+    const mochaStartIndex = lines.findIndex(line => line.includes('Running test cases using Mocha'));
+    
+    // If we found the marker, only keep lines after it, otherwise keep all lines
+    const relevantLines = mochaStartIndex !== -1 
+      ? lines.slice(mochaStartIndex + 1)  // Skip the "Running test cases" line too
+      : lines;
+    
+    // Filter out empty lines at the beginning
+    let startIndex = 0;
+    while (startIndex < relevantLines.length && !relevantLines[startIndex].trim()) {
+      startIndex++;
+    }
+    
+    // Join the filtered lines with CRLF
+    return relevantLines.slice(startIndex).join('\r\n');
+  }
 
   // Debug run profile - similar but with debugging configuration
   controller.createRunProfile(
