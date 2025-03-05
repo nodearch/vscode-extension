@@ -3,6 +3,10 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as cp from 'child_process';
 import { parseTestCases } from './testCaseParser';
+import { 
+  prepareOutputForAppend, 
+  prepareOutputForErrorMessage 
+} from './outputFormatter';
 
 export default function activate(context: vscode.ExtensionContext) {
   // Create a Test Controller with a unique ID and a display label.
@@ -24,8 +28,8 @@ export default function activate(context: vscode.ExtensionContext) {
       // Clear existing test items
       controller.items.replace([]);
 
-      // Find all TypeScript and JavaScript files
-      const filePattern = '**/*.{ts,js}';
+      // Find all TypeScript files
+      const filePattern = '**/*.{ts}';
       const excludePattern = '**/node_modules/**';
       
       console.log('Looking for test files with pattern:', filePattern);
@@ -71,7 +75,7 @@ export default function activate(context: vscode.ExtensionContext) {
   }
 
   // Set up file watcher to update tests when files change
-  const fileWatcher = vscode.workspace.createFileSystemWatcher('**/*.{ts,js}');
+  const fileWatcher = vscode.workspace.createFileSystemWatcher('**/*.{ts}');
   context.subscriptions.push(
     fileWatcher.onDidChange(discoverTestCases),
     fileWatcher.onDidCreate(discoverTestCases),
@@ -177,26 +181,25 @@ export default function activate(context: vscode.ExtensionContext) {
             // Test passed
             run.passed(test);
             
-            // Format and filter the output
+            // Format and filter the output using the imported formatter
             if (result.output.trim()) {
-              const formattedOutput = formatTestOutput(result.output);
-              run.appendOutput("\r\n" + formattedOutput + "\r\n");
+              const formattedOutput = prepareOutputForAppend(result.output);
+              run.appendOutput(formattedOutput);
             }
           } else {
-            // For failed tests, use the same filtering approach
-            const formattedOutput = formatTestOutput(result.output);
+            // For failed tests
+            const formattedOutputForAppend = prepareOutputForAppend(result.output);
+            const formattedOutputForError = prepareOutputForErrorMessage(result.output);
             
-            // For error messages in the Problems panel, strip color codes
-            const ansiRegex = /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g;
-            const plainOutput = formattedOutput.replace(ansiRegex, '');
-            const message = new vscode.TestMessage(plainOutput.replace(/\r\n/g, '\n'));
+            // Create error message using the properly formatted output
+            const message = new vscode.TestMessage(formattedOutputForError);
             if (test.uri && test.range) {
               message.location = new vscode.Location(test.uri, test.range);
             }
             run.failed(test, message);
             
             // Show color output in the test output panel
-            run.appendOutput("\r\n" + formattedOutput + "\r\n");
+            run.appendOutput(formattedOutputForAppend);
           }
         } catch (err) {
           const errorMessage = err instanceof Error ? err.message : String(err);
@@ -213,29 +216,6 @@ export default function activate(context: vscode.ExtensionContext) {
     },
     true
   );
-
-  // Helper function to format test output - filter logs and fix line breaks
-  function formatTestOutput(output: string): string {
-    // Split the output into lines
-    const lines = output.split(/\r?\n/);
-    
-    // Find the index of the line that indicates the start of Mocha output
-    const mochaStartIndex = lines.findIndex(line => line.includes('Running test cases using Mocha'));
-    
-    // If we found the marker, only keep lines after it, otherwise keep all lines
-    const relevantLines = mochaStartIndex !== -1 
-      ? lines.slice(mochaStartIndex + 1)  // Skip the "Running test cases" line too
-      : lines;
-    
-    // Filter out empty lines at the beginning
-    let startIndex = 0;
-    while (startIndex < relevantLines.length && !relevantLines[startIndex].trim()) {
-      startIndex++;
-    }
-    
-    // Join the filtered lines with CRLF
-    return relevantLines.slice(startIndex).join('\r\n');
-  }
 
   // Debug run profile - similar but with debugging configuration
   controller.createRunProfile(
