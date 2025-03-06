@@ -60,24 +60,8 @@ async function ensureLaunchConfig() {
 
   const launchJsonPath = path.join(workspaceFolder.uri.fsPath, '.vscode', 'launch.json');
   if (!fs.existsSync(launchJsonPath)) {
-    const config = {
-      version: "0.2.0",
-      configurations: [
-        {
-          name: "Debug NodeArch App",
-          type: "node",
-          request: "launch",
-          program: "${workspaceFolder}/node_modules/.bin/nodearch",
-          args: ["start"],
-          console: "integratedTerminal",
-          cwd: "${workspaceFolder}",
-          env: { "NODE_ENV": "development" },
-          outputCapture: "std"
-        }
-      ]
-    };
     fs.mkdirSync(path.dirname(launchJsonPath), { recursive: true });
-    fs.writeFileSync(launchJsonPath, JSON.stringify(config, null, 4));
+    fs.writeFileSync(launchJsonPath, JSON.stringify(debugConfig, null, 4));
   }
 }
 
@@ -88,21 +72,29 @@ async function startDebugging() {
     return;
   }
 
-  // Launch the debugger
-  const debugConfig: vscode.DebugConfiguration = {
-    name: "Debug NodeArch App",
-    type: "node",
-    request: "launch",
-    program: "${workspaceFolder}/node_modules/.bin/nodearch",
-    args: ["start"],
-    console: "integratedTerminal",
-    cwd: "${workspaceFolder}",
-    env: { "NODE_ENV": "development" },
-    outputCapture: "std"
-  };
-
-  const success = await vscode.debug.startDebugging(workspaceFolder, debugConfig);
+  const success = await vscode.debug.startDebugging(workspaceFolder, debugConfig.configurations[0]);
   if (!success) {
     vscode.window.showErrorMessage('Failed to start NodeArch debugging.');
   }
 }
+
+const debugConfig = {
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug NodeArch App",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "nodearch",
+      "args": [
+        "start"
+      ],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NODE_ENV": "development"
+      },
+      "outputCapture": "std"
+    }
+  ]
+};
