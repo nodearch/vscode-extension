@@ -23,6 +23,8 @@ export default function activate(context: vscode.ExtensionContext) {
   startStatusBarItem.command = 'nodearch.start';
   startStatusBarItem.text = '$(play) Start NodeArch';
   startStatusBarItem.tooltip = 'Run NodeArch Project';
+  startStatusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.prominentBackground');
+  startStatusBarItem.color = new vscode.ThemeColor('statusBarItem.prominentForeground');
   startStatusBarItem.show();
 
   const debugStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);

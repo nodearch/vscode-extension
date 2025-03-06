@@ -5,11 +5,14 @@ NodeArch Extension for Visual Studio Code
 ## Features
 
 * **Test Explorer Integration**: Discover and run your NodeArch tests directly from VS Code
+* **Application Launch Controls**: Start and debug your NodeArch application with convenient status bar buttons
+* **Debug Configuration**: Automatic setup of optimal debugging configuration
 * More features coming soon!
 
 ## Documentation
 
 * [Testing Support](./docs/testing.md) - Learn how to use the integrated test explorer with NodeArch tests
+* [Running & Debugging](./docs/running.md) - Learn how to use the running and debugging features
 
 ## Requirements
 
@@ -26,4 +29,4 @@ This extension contributes the following settings:
 
 ### 1.0.0
 
-Initial release featuring Test Explorer integration for NodeArch tests.
+Initial release featuring Test Explorer integration for NodeArch tests and application running controls.
