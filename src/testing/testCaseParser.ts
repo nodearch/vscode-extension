@@ -46,40 +46,51 @@ function findTestSuites(
   suiteItems: Map<string, vscode.TestItem>,
   testDataMap: Map<string, TestMetadata>
 ): void {
-  // Fixed regex to match @Test() pattern (with empty parentheses)
-  const testRegex = /@Test\s*\(\s*\)[\s\n]*(?:export\s+)?class\s+(\w+)/g;
+  // Updated regex to match @Test() pattern when other decorators exist between @Test and class
+  // This will find @Test() decorators, then look ahead for a class declaration, allowing other decorators in between
+  const testRegex = /@Test\s*\(\s*\)/g;
   
   let match;
   while ((match = testRegex.exec(fileContent)) !== null) {
-    const [fullMatch, className] = match;
-    const lineNumber = getLineNumber(fileContent, match.index);
+    const decoratorPosition = match.index;
+    const lineNumber = getLineNumber(fileContent, decoratorPosition);
     
-    // Format class name for display (e.g., "UserTest" -> "User Test")
-    const suiteName = formatClassName(className);
+    // Look ahead from the @Test decorator to find the class declaration
+    const afterTest = fileContent.substring(decoratorPosition, decoratorPosition + 500);
+    const classMatch = /(?:[\s\n]*@\w+(?:\([^)]*\))?)*[\s\n]*(?:export\s+)?class\s+(\w+)/m.exec(afterTest);
     
-    // Create test item for the suite
-    const suiteId = `suite:${fileUri.fsPath}:${lineNumber}`;
-    const suiteItem = controller.createTestItem(
-      suiteId,
-      suiteName,
-      fileUri
-    );
-    
-    // Set the range for navigation
-    const document = fileContent.split('\n');
-    const lineIndex = lineNumber - 1;
-    
-    if (lineIndex >= 0 && lineIndex < document.length) {
-      const lineText = document[lineIndex];
-      suiteItem.range = new vscode.Range(
-        new vscode.Position(lineIndex, 0),
-        new vscode.Position(lineIndex, lineText.length)
+    if (classMatch) {
+      const className = classMatch[1];
+      
+      // Format class name for display (e.g., "UserTest" -> "User Test")
+      const suiteName = formatClassName(className);
+      
+      console.log(`Found test suite: "${suiteName}" from class ${className}`);
+      
+      // Create test item for the suite
+      const suiteId = `suite:${fileUri.fsPath}:${lineNumber}`;
+      const suiteItem = controller.createTestItem(
+        suiteId,
+        suiteName,
+        fileUri
       );
+      
+      // Set the range for navigation to the @Test decorator line
+      const document = fileContent.split('\n');
+      const lineIndex = lineNumber - 1;
+      
+      if (lineIndex >= 0 && lineIndex < document.length) {
+        const lineText = document[lineIndex];
+        suiteItem.range = new vscode.Range(
+          new vscode.Position(lineIndex, 0),
+          new vscode.Position(lineIndex, lineText.length)
+        );
+      }
+      
+      // Store the suite in our maps
+      suiteItems.set(suiteName, suiteItem); 
+      testDataMap.set(suiteId, { description: suiteName });
     }
-    
-    // Store the suite in our maps
-    suiteItems.set(suiteName, suiteItem); 
-    testDataMap.set(suiteId, { description: suiteName });
   }
 }
 
@@ -189,13 +200,22 @@ function findParentClassName(fileContent: string, position: number): string | un
   // Get content before the test case
   const beforeTest = fileContent.substring(0, position);
   
-  // Find the nearest class declaration with @Test above the current position
-  const classMatches = [...beforeTest.matchAll(/@Test\s*\(\s*\)[\s\n]*(?:export\s+)?class\s+(\w+)/g)];
+  // Find the nearest @Test decorator above the current position
+  const testDecorators = [...beforeTest.matchAll(/@Test\s*\(\s*\)/g)];
   
-  if (classMatches.length > 0) {
-    const lastClassMatch = classMatches[classMatches.length - 1];
-    const className = lastClassMatch[1];
-    return formatClassName(className);
+  if (testDecorators.length > 0) {
+    // Get the last @Test decorator position
+    const lastTestDecorator = testDecorators[testDecorators.length - 1];
+    const testDecoratorPos = lastTestDecorator.index!;
+    
+    // Look ahead from that decorator to find the class name
+    const afterTest = fileContent.substring(testDecoratorPos, position);
+    const classMatch = /(?:[\s\n]*@\w+(?:\([^)]*\))?)*[\s\n]*(?:export\s+)?class\s+(\w+)/m.exec(afterTest);
+    
+    if (classMatch) {
+      const className = classMatch[1];
+      return formatClassName(className);
+    }
   }
   
   return undefined;
