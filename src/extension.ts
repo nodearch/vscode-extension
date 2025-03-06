@@ -81,6 +81,12 @@ async function checkNodeArchInstallation(): Promise<boolean> {
  * - Highlight unused components or services.
  * - Debug tab
  * - Tests tab
+ * - Graphical Service Dependency Map
+ * - Add button to start -w
+ * - Add button to generate openapi.json
+ * - Real-Time Logs in VSCode
+ * - Remote NodeArch Management - Use VSCode's SSH extension API to execute remote commands.
+ * - Performance Profiling
  */
 
 
