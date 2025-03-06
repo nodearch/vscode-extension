@@ -14,7 +14,7 @@ export default function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(controller);
 
   // Create a map to store additional test case data
-  const testDataMap = new Map<string, { description: string }>();
+  const testDataMap = new Map<string, { description: string, suite?: string }>();
 
   // Function to discover test cases in the workspace
   async function discoverTestCases() {
@@ -40,13 +40,13 @@ export default function activate(context: vscode.ExtensionContext) {
         try {
           const fileContent = await fs.readFile(fileUri.fsPath, 'utf-8');
           
-          // Only attempt to parse files that contain @Case decorators
-          if (fileContent.includes('@Case')) {
-            console.log(`Found @Case decorator in ${fileUri.fsPath}`);
+          // Only attempt to parse files that contain @Case or @Test decorators
+          if (fileContent.includes('@Case') || fileContent.includes('@Test')) {
+            console.log(`Found test decorators in ${fileUri.fsPath}`);
             
-            // Use the imported parser to find test cases
+            // Use the imported parser to find test cases and suites
             const testCases = parseTestCases(fileContent, fileUri, controller, testDataMap);
-            console.log(`${testCases.length} test cases found in ${fileUri.fsPath}`);
+            console.log(`${testCases.length} test items found in ${fileUri.fsPath}`);
             
             if (testCases.length > 0) {
               // Create a file-level test item as a parent
@@ -57,7 +57,7 @@ export default function activate(context: vscode.ExtensionContext) {
                 fileUri
               );
               
-              // Add each test case as a child of the file test item
+              // Add each test item as a child of the file test item
               testCases.forEach(testCase => {
                 fileTestItem.children.add(testCase);
               });
@@ -141,12 +141,17 @@ export default function activate(context: vscode.ExtensionContext) {
         try {
           // Get test description from our map
           const testData = testDataMap.get(test.id);
-          const description = testData?.description || test.label;
+          if (!testData) {
+            run.skipped(test);
+            continue;
+          }
+          
+          const description = testData.description;
           
           // Escape quotes in the description for the shell command
           const escapedDescription = description.replace(/"/g, '\\"');
           
-          // Run the test using nodearch command
+          // Run the test using nodearch command - works for both suites and cases
           const cmd = `nodearch test -g "${escapedDescription}"`;
           console.log(`Executing: ${cmd}`);
           
