@@ -54,6 +54,18 @@
     ],
     "commands": [
       {
+        "command": "nodearch.start",
+        "title": "Run NodeArch Project"
+      },
+      {
+        "command": "nodearch.startWatch",
+        "title": "Run NodeArch in Watch Mode"
+      },
+      {
+        "command": "nodearch.debug",
+        "title": "Debug NodeArch Project"
+      },
+      {
         "command": "nodearch.createHook",
         "title": "NodeArch: Create Hook"
       },

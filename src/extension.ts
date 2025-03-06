@@ -5,6 +5,8 @@ import { ExtensionExplorerProvider } from './views/extension-explorer';
 import nodearchConfig from './nodearch-config';
 import codeInsights from './code-insights';
 import testing from './testing';
+import running from './running';
+import { exec } from 'child_process';
 
 export function activate(context: vscode.ExtensionContext) {
 	// Get the root path of the workspace
@@ -14,11 +16,12 @@ export function activate(context: vscode.ExtensionContext) {
 			: undefined;
 
 
-  const diagnosticCollection = vscode.languages.createDiagnosticCollection('nodearch');
-  context.subscriptions.push(diagnosticCollection);
+	const diagnosticCollection = vscode.languages.createDiagnosticCollection('nodearch');
+	context.subscriptions.push(diagnosticCollection);
 
-  nodearchConfig(context, diagnosticCollection);
-  codeInsights(context, diagnosticCollection);
+	nodearchConfig(context, diagnosticCollection);
+	running(context);
+	codeInsights(context, diagnosticCollection);
 	testing(context);
 
 	// Register commands that generate files
@@ -41,14 +44,29 @@ export function activate(context: vscode.ExtensionContext) {
 		extensionProvider
 	);
 
+	checkNodeArchInstallation()
+		.then((installed) => {
+			if (!installed) {
+				vscode.window.showInformationMessage('NodeArch CLI is not installed. Please install it to enable all features. (npm install -g @nodearch/cli)');
+			}
+		});
+
 }
 
 // This method is called when your extension is deactivated
 export function deactivate() { }
 
+async function checkNodeArchInstallation(): Promise<boolean> {
+	return new Promise((resolve) => {
+		exec('nodearch --version', (error) => {
+			resolve(!error);
+		});
+	});
+}
+
 
 /**
- * TODO: 
+ * TODO:
  * - Test Runner: Add a command to run NodeArch-specific tests directly from VSCode
  * - Add a command to run specific @Test cases or entire test files.
  * - Integrate with testing frameworks to display pass/fail statuses in the editor.
