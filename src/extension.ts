@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
-import { ComponentExplorerProvider } from './views/component-explorer';
+// import { ComponentExplorerProvider } from './views/component-explorer';
 import { registerGenerateCommands } from './generate';
-import { ExtensionExplorerProvider } from './views/extension-explorer';
+// import { ExtensionExplorerProvider } from './views/extension-explorer';
 import nodearchConfig from './nodearch-config';
 import codeInsights from './code-insights';
 import testing from './testing';
@@ -27,22 +27,22 @@ export function activate(context: vscode.ExtensionContext) {
 	// Register commands that generate files
 	registerGenerateCommands(context, rootPath);
 
-	const componentProvider = new ComponentExplorerProvider();
-	const extensionProvider = new ExtensionExplorerProvider();
+	// const componentProvider = new ComponentExplorerProvider();
+	// const extensionProvider = new ExtensionExplorerProvider();
 
-	vscode.commands.registerCommand('nodearchComponents.refreshEntry', () =>
-		componentProvider.refresh()
-	);
+	// vscode.commands.registerCommand('nodearchComponents.refreshEntry', () =>
+	// 	componentProvider.refresh()
+	// );
 
-	vscode.window.registerTreeDataProvider(
-		'nodearchComponents',
-		componentProvider
-	);
+	// vscode.window.registerTreeDataProvider(
+	// 	'nodearchComponents',
+	// 	componentProvider
+	// );
 
-	vscode.window.registerTreeDataProvider(
-		'nodearchExtensions',
-		extensionProvider
-	);
+	// vscode.window.registerTreeDataProvider(
+	// 	'nodearchExtensions',
+	// 	extensionProvider
+	// );
 
 	checkNodeArchInstallation()
 		.then((installed) => {

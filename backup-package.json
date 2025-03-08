@@ -2,7 +2,7 @@
   "name": "nodearch-tools",
   "displayName": "NodeArch Tools",
   "description": "A VSCode extension for NodeArch framework development",
-  "version": "0.3.0",
+  "version": "0.2.0",
   "engines": {
     "vscode": "^1.96.0"
   },
@@ -64,25 +64,74 @@
       {
         "command": "nodearch.debug",
         "title": "Debug NodeArch Project"
+      },
+      {
+        "command": "nodearch.createHook",
+        "title": "NodeArch: Create Hook"
+      },
+      {
+        "command": "nodearchComponents.refreshEntry",
+        "title": "NodeArch: Refresh Components",
+        "icon": {
+          "light": "assets/refresh-light.svg",
+          "dark": "assets/refresh-dark.svg"
+        }
+      },
+      {
+        "command": "nodearchComponents.addEntry",
+        "title": "NodeArch: Add Components",
+        "icon": {
+          "light": "assets/plus-light.svg",
+          "dark": "assets/plus-dark.svg"
+        }
       }
     ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "nodearch-activitybar",
+          "title": "NodeArch",
+          "icon": "assets/icon.png"
+        }
+      ]
+    },
+    "views": {
+      "nodearch-activitybar": [
+        {
+          "id": "nodearchComponents",
+          "name": "Components",
+          "contextualTitle": "NodeArch Components"
+        },
+        {
+          "id": "nodearchTests",
+          "name": "Tests",
+          "contextualTitle": "NodeArch Tests"
+        },
+        {
+          "id": "nodearchExtensions",
+          "name": "Extensions",
+          "contextualTitle": "NodeArch Extensions"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "nodearchComponents.refreshEntry",
+          "when": "view == nodearchComponents",
+          "group": "navigation"
+        },
+        {
+          "command": "nodearchComponents.addEntry",
+          "when": "view == nodearchComponents",
+          "group": "navigation"
+        }
+      ]
+    },
     "snippets": [
       {
         "language": "typescript",
         "path": "./lib/snippets/components.code-snippets"
-      }
-    ]
-  },
-  "extensionKind": ["workspace"],
-  "capabilities": {
-    "workspaceRecommendations": [
-      {
-        "criteria": {
-          "anyOf": [
-            { "filePattern": "nodearch" }
-          ]
-        },
-        "recommendationReason": "This workspace contains a 'nodearch' configuration file, which is used for NodeArch configuration."
       }
     ]
   },
